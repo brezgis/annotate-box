@@ -1,0 +1,106 @@
+# annotate-box configuration
+# Copy to config.yaml and fill in your details
+
+project:
+  name: "My Annotation Project"
+  description: "A short description of what you're annotating"
+
+# Server / deployment settings
+server:
+  # Option 1: DuckDNS (free subdomain)
+  duckdns:
+    subdomain: my-project        # → my-project.duckdns.org
+    token: YOUR_DUCKDNS_TOKEN
+
+  # Option 2: Custom domain (comment out duckdns section above)
+  # domain: annotations.example.com
+
+  # Label Studio admin account (created on first run)
+  admin:
+    email: you@example.com
+    password: changeme123
+
+  # Port Label Studio listens on (nginx proxies to this)
+  port: 8093
+
+# Team members
+team:
+  - name: Alice
+    email: alice@example.com
+    role: admin
+  - name: Bob
+    email: bob@example.com
+  - name: Carol
+    email: carol@example.com
+
+# Annotation schema
+schema:
+  # Task type: span | classification | ner | sequence | pairwise
+  type: span
+
+  # Granularity (for span tasks): sentence | character
+  granularity: sentence
+
+  # Labels
+  labels:
+    - name: LABEL_A
+      hotkey: "1"
+      color: "#FF6B6B"
+      description: "Description of what this label means"
+    - name: LABEL_B
+      hotkey: "2"
+      color: "#4ECDC4"
+      description: "Description of what this label means"
+    - name: LABEL_C
+      hotkey: "3"
+      color: "#45B7D1"
+      description: "Description of what this label means"
+    - name: UNCERTAIN
+      hotkey: "9"
+      color: "#95A5A6"
+      description: "Annotator is unsure"
+
+  # Maximum annotations per task (for inter-annotator agreement)
+  max_annotations: 1    # Set to 3 for calibration projects
+
+# Data settings
+data:
+  # Input format: text | csv | json | jsonl | conll
+  format: text
+
+  # Source directory (relative to this config file)
+  source: ./data/
+
+  # Preprocessing options
+  sentence_split: true          # Split text into sentences (NLTK punkt)
+  shuffle: true                 # Randomize order
+  shuffle_seed: 42              # For reproducibility
+  # max_items: 200              # Limit number of items to import
+  # min_length: 50              # Minimum text length (characters)
+  # max_length: 10000           # Maximum text length (characters)
+
+# Automated export settings
+export:
+  # Schedule: daily | hourly | manual
+  schedule: daily
+
+  # Time of day (for daily schedule, 24h format, local timezone)
+  time: "22:00"
+  timezone: "America/New_York"
+
+  # Export format: json | csv | conll
+  format: json
+
+  # Git settings
+  git:
+    enabled: true
+    # remote: https://github.com/you/your-annotations.git  # optional
+    # push: true                                             # auto-push to remote
+
+# OpenClaw AI assistant (optional)
+# Requires an OpenClaw installation: https://github.com/openclaw/openclaw
+agent:
+  enabled: false
+  # discord:
+  #   guild_id: "YOUR_DISCORD_SERVER_ID"
+  #   channel: "general"
