@@ -504,6 +504,22 @@ def write_docker_compose(config):
 # Usage: docker compose up -d
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: annotate-box-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=labelstudio
+      - POSTGRES_USER=labelstudio
+      - POSTGRES_PASSWORD=${{POSTGRES_PASSWORD:-labelstudio}}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labelstudio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   label-studio:
     image: heartexlabs/label-studio:latest
     container_name: annotate-box-ls
@@ -514,6 +530,11 @@ services:
       - LABEL_STUDIO_HOST=${{LABEL_STUDIO_HOST}}
       - LABEL_STUDIO_PORT={port}
       - DJANGO_DB=default
+      - POSTGRE_NAME=labelstudio
+      - POSTGRE_USER=labelstudio
+      - POSTGRE_PASSWORD=${{POSTGRES_PASSWORD:-labelstudio}}
+      - POSTGRE_HOST=postgres
+      - POSTGRE_PORT=5432
       - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
       - LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files
       - CSRF_TRUSTED_ORIGINS=${{CSRF_TRUSTED_ORIGINS}}
@@ -522,6 +543,9 @@ services:
     volumes:
       - ls-data:/label-studio/data
       - ls-files:/label-studio/files
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:{port}/health"]
       interval: 30s
@@ -544,6 +568,7 @@ services:
         condition: service_healthy
 
 volumes:
+  pg-data:
   ls-data:
   ls-files:
   caddy-data:
@@ -582,11 +607,15 @@ def write_env(config):
         host = f"https://{domain}"
         origins = host
 
+    pg_pass = random_password(20)
     env_lines = [
         f"# annotate-box environment",
         f"LABEL_STUDIO_HOST={host}",
         f"LABEL_STUDIO_PORT={port}",
         f"CSRF_TRUSTED_ORIGINS={origins}",
+        f"",
+        f"# Database",
+        f"POSTGRES_PASSWORD={pg_pass}",
         f"",
         f"# Admin credentials",
         f"LABEL_STUDIO_USERNAME={config['server']['admin']['email']}",

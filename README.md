@@ -112,25 +112,45 @@ If you run [OpenClaw](https://github.com/openclaw/openclaw), you can add a Disco
 - Monitors annotation progress
 - Runs exports on demand
 
+### Inter-Annotator Agreement
+
+After your calibration round:
+
+```bash
+python3 scripts/iaa.py exports/calibration.json
+```
+
+Outputs:
+- **Percent agreement** — simple, interpretable
+- **Cohen's kappa** — corrects for chance (pairwise)
+- **Krippendorff's alpha** — handles multiple annotators, missing data
+
+For sentence-level annotation (ParagraphLabels), it automatically computes per-sentence and per-label agreement. For span tasks, it computes exact-match F1.
+
+Save the report:
+```bash
+python3 scripts/iaa.py exports/calibration.json --format markdown -o IAA_REPORT.md
+```
+
 ## Project Structure
 
 ```
 annotate-box/
 ├── config.yaml              # Your project configuration
-├── setup.sh                 # Deployment script
-├── docker-compose.yaml      # Docker deployment
+├── config.example.yaml      # Annotated example config
+├── setup.py                 # Interactive setup wizard
+├── docker-compose.yaml      # Docker deployment (generated)
+├── Caddyfile                # Reverse proxy + TLS (generated)
+├── label-config.xml         # Label Studio schema (generated)
+├── requirements.txt         # Python dependencies
 ├── scripts/
 │   ├── import_data.py       # Data preprocessing + import
 │   ├── export.sh            # Git export script
 │   ├── schema_builder.py    # YAML → Label Studio XML
 │   └── iaa.py               # Inter-annotator agreement metrics
 ├── templates/
-│   ├── nginx.conf.j2        # Nginx config template
-│   ├── label-studio.service # Systemd service template
 │   └── agent/               # OpenClaw agent templates
-│       ├── SOUL.md
-│       ├── AGENTS.md
-│       └── TOOLS.md
+│       └── SOUL.md
 └── examples/
     └── ted-talks/           # Example config from our TED project
 ```
