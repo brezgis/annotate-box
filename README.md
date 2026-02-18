@@ -1,13 +1,24 @@
 # 📦 annotate-box
 
-Annotation environment in a box. Spin up a complete, production-ready annotation project in minutes.
+**Annotation is messy.** Setting up a project means deploying a server, configuring label schemas in XML, writing import scripts, wrangling data formats, manually exporting snapshots, and computing agreement metrics by hand. Every team reinvents the same wheel.
 
-**What you get:**
+**annotate-box is the one-stop shop.** One setup wizard, one URL you send to your annotators, one command to check agreement. Everything else is handled.
+
+### Why use this?
+
+- **Your annotators get one URL.** They sign up, open the project, and start labeling. No local installs, no technical setup on their end.
+- **You don't write XML.** Describe your labels in YAML or answer a few wizard questions — the Label Studio config is generated for you.
+- **Your annotations are versioned.** Automatic git exports mean you can always go back, compare, and reproduce.
+- **Agreement metrics are built in.** One command after calibration tells you if your team agrees — no exporting to spreadsheets and writing scripts.
+- **It's free.** Label Studio is open source, DuckDNS gives you a free domain, Let's Encrypt gives you free TLS. The only cost is a server (even a $5/mo VPS works).
+
+### What you get:
 - [Label Studio](https://labelstud.io) deployed with TLS and a public URL
 - Schema builder — describe your labels in YAML, get the right Label Studio config
 - Data preprocessing — sentence splitting, format conversion, shuffling
 - Automated git exports — versioned annotation history on a schedule
 - Inter-annotator agreement metrics out of the box
+- Annotation guidelines support — drop in a `guidelines.md` and it's available to your team
 - Optional AI assistant via [OpenClaw](https://github.com/openclaw/openclaw)
 
 ## Quick Start
