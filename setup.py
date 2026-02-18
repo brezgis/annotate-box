@@ -308,6 +308,15 @@ def run_wizard():
     if config['export']['git']['enabled']:
         config['export']['git']['push'] = confirm("Auto-push to remote?", default=False)
 
+    # ── Guidelines ──
+    section("Annotation Guidelines")
+    info("If you have a guidelines document (markdown), place it at guidelines.md")
+    info("in the project root. It will be shown to annotators in Label Studio.")
+    if os.path.exists('guidelines.md'):
+        success("Found guidelines.md — will be included in project setup")
+    else:
+        info("No guidelines.md found — you can add one later.")
+
     # ── Agent ──
     section("AI Project Assistant (Optional)")
     info("An AI bot on Discord that helps your team with annotation questions,")
