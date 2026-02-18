@@ -39,7 +39,7 @@ def load_csv(source_dir, text_column='text', **kwargs):
     """Load CSV/TSV files. Each row becomes one item."""
     items = []
     source = Path(source_dir)
-    for f in sorted(source.glob('**/*.csv')) | sorted(source.glob('**/*.tsv')):
+    for f in sorted(source.glob('**/*.csv')) + sorted(source.glob('**/*.tsv')):
         delimiter = '\t' if f.suffix == '.tsv' else ','
         with open(f, encoding='utf-8') as fh:
             reader = csv.DictReader(fh, delimiter=delimiter)
@@ -145,8 +145,19 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Preview without writing')
     args = parser.parse_args()
 
-    with open(args.config) as f:
-        config = yaml.safe_load(f)
+    try:
+        with open(args.config) as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError:
+        print(f"ERROR: Config file not found: {args.config}")
+        sys.exit(1)
+    except yaml.YAMLError as e:
+        print(f"ERROR: Invalid YAML in {args.config}: {e}")
+        sys.exit(1)
+
+    if not isinstance(config, dict):
+        print(f"ERROR: Config file must be a YAML mapping, got {type(config).__name__}")
+        sys.exit(1)
 
     data_config = config.get('data', {})
     schema_config = config.get('schema', {})
@@ -154,6 +165,11 @@ def main():
     # Determine source
     source = args.input or data_config.get('source', './data/')
     fmt = data_config.get('format', 'text')
+
+    # Warn about absolute paths outside project
+    source_path = Path(source).resolve()
+    if source_path.is_absolute() and not str(source_path).startswith(str(Path('.').resolve())):
+        print(f"WARNING: Source path '{source}' is outside the project directory.")
 
     print(f"Loading {fmt} data from {source}...")
     loader = LOADERS.get(fmt)
@@ -192,7 +208,7 @@ def main():
         print(f"  {total_sents} total sentences across {len(items)} items")
 
     # Shuffling (if not already done above)
-    if data_config.get('shuffle', False) and not max_items:
+    if data_config.get('shuffle', False) and max_items is None:
         seed = data_config.get('shuffle_seed', 42)
         random.seed(seed)
         random.shuffle(items)

@@ -183,6 +183,9 @@ def build_schema(config):
         if multi:
             schema_type = 'classification_multi'
 
+    if not labels:
+        raise ValueError("Schema must have at least one label")
+
     key = (schema_type, granularity)
 
     # Try exact match first, then without granularity

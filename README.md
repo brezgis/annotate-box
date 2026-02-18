@@ -5,28 +5,34 @@ Annotation environment in a box. Spin up a complete, production-ready annotation
 **What you get:**
 - [Label Studio](https://labelstud.io) deployed with TLS and a public URL
 - Schema builder — describe your labels in YAML, get the right Label Studio config
-- Data preprocessing — sentence splitting, format conversion, deduplication
+- Data preprocessing — sentence splitting, format conversion, shuffling
 - Automated git exports — versioned annotation history on a schedule
-- Optional AI assistant — an OpenClaw agent on Discord to help your team
+- Inter-annotator agreement metrics out of the box
+- Optional AI assistant via [OpenClaw](https://github.com/openclaw/openclaw)
 
 ## Quick Start
 
 ```bash
-# 1. Clone and configure
+# 1. Clone and install
 git clone https://github.com/brezgis/annotate-box
 cd annotate-box
-cp config.example.yaml config.yaml
-# Edit config.yaml with your project details
+pip install -r requirements.txt
 
-# 2. Deploy (on your server)
-./setup.sh
+# 2. Run the setup wizard
+python3 setup.py
+# Walks you through: project name, labels, deployment, team, etc.
+# Generates config.yaml, docker-compose.yaml, label-config.xml, .env
 
-# 3. Import your data
-python3 scripts/import_data.py --config config.yaml --input ./data/
+# 3. Start the server
+docker compose up -d
 
-# 4. Start annotating
-# Visit https://your-project.duckdns.org
+# 4. Import your data
+python3 scripts/import_data.py --config config.yaml
+
+# 5. Start annotating!
 ```
+
+Or configure manually — copy `config.example.yaml` to `config.yaml` and edit it.
 
 ## What It Does
 
@@ -47,11 +53,10 @@ schema:
       color: "#4ECDC4"
 ```
 
-And get the correct Label Studio XML config automatically. Supports:
+Run `python3 scripts/schema_builder.py config.yaml` to generate Label Studio XML. Supports:
 - **Span labeling** (sentence-level or character-level)
 - **Document classification** (single or multi-label)
 - **Named entity recognition**
-- **Sequence labeling**
 - **Pairwise comparison**
 
 ### Data Preprocessing
@@ -60,13 +65,12 @@ Import from common formats:
 - Plain text files (`.txt`)
 - CSV / TSV
 - JSON / JSONL
-- CoNLL format
 
 Optional transforms:
 - Sentence splitting (NLTK punkt)
-- Tokenization
-- Deduplication
 - Shuffling with seed (for unbiased annotation order)
+- Length filtering
+- Max item limits
 
 ### Automated Exports
 
@@ -77,40 +81,21 @@ export:
   schedule: daily
   time: "22:00"
   format: json
-```
-
-Every export includes annotation counts, so your git log reads like a progress tracker:
-```
-Annotation export 2026-02-18 (calibration: 3/3, main: 47/200)
+  git:
+    enabled: true
 ```
 
 ### Deployment
-
-Two options:
 
 **Docker Compose** (recommended):
 ```bash
 docker compose up -d
 ```
 
-**Bare metal** (for existing servers):
-```bash
-./setup.sh --bare
-```
-
-Both handle:
-- Label Studio installation and configuration
-- Nginx reverse proxy
-- TLS via Let's Encrypt (with DuckDNS or custom domain)
-- Systemd service (bare metal) or container restart policy (Docker)
-
-### AI Project Assistant (Optional)
-
-If you run [OpenClaw](https://github.com/openclaw/openclaw), you can add a Discord bot that:
-- Answers questions about the annotation schema
-- Troubleshoots Label Studio issues
-- Monitors annotation progress
-- Runs exports on demand
+Includes:
+- Label Studio with PostgreSQL backend
+- Caddy reverse proxy with automatic TLS
+- Support for DuckDNS (free subdomain) or custom domains
 
 ### Inter-Annotator Agreement
 
@@ -125,46 +110,52 @@ Outputs:
 - **Cohen's kappa** — corrects for chance (pairwise)
 - **Krippendorff's alpha** — handles multiple annotators, missing data
 
-For sentence-level annotation (ParagraphLabels), it automatically computes per-sentence and per-label agreement. For span tasks, it computes exact-match F1.
+For sentence-level annotation, it automatically computes per-sentence and per-label agreement. For span tasks, it computes exact-match F1.
 
-Save the report:
 ```bash
 python3 scripts/iaa.py exports/calibration.json --format markdown -o IAA_REPORT.md
 ```
+
+### AI Project Assistant (Optional)
+
+With [OpenClaw](https://github.com/openclaw/openclaw), you can add a Discord bot that:
+- Answers questions about the annotation schema
+- Troubleshoots Label Studio issues
+- Monitors annotation progress
+- Runs exports on demand
 
 ## Project Structure
 
 ```
 annotate-box/
-├── config.yaml              # Your project configuration
-├── config.example.yaml      # Annotated example config
 ├── setup.py                 # Interactive setup wizard
-├── docker-compose.yaml      # Docker deployment (generated)
-├── Caddyfile                # Reverse proxy + TLS (generated)
-├── label-config.xml         # Label Studio schema (generated)
+├── config.example.yaml      # Annotated example config
 ├── requirements.txt         # Python dependencies
 ├── scripts/
+│   ├── schema_builder.py    # YAML → Label Studio XML
 │   ├── import_data.py       # Data preprocessing + import
 │   ├── export.sh            # Git export script
-│   ├── schema_builder.py    # YAML → Label Studio XML
-│   └── iaa.py               # Inter-annotator agreement metrics
+│   └── iaa.py               # Inter-annotator agreement
 ├── templates/
-│   └── agent/               # OpenClaw agent templates
-│       └── SOUL.md
-└── examples/
-    └── ted-talks/           # Example config from our TED project
+│   └── agent/SOUL.md        # OpenClaw agent template
+├── examples/
+│   └── ted-talks/config.yaml
+└── tests/                   # Unit tests (pytest)
 ```
+
+**Generated files** (after setup):
+- `config.yaml` — your project config (gitignored)
+- `docker-compose.yaml` — Docker deployment
+- `Caddyfile` — reverse proxy + TLS
+- `label-config.xml` — Label Studio schema
+- `.env` — credentials (gitignored)
 
 ## Requirements
 
-- A server (VPS, home server, etc.) with Python 3.9+
-- A domain name OR free DuckDNS subdomain
-- Docker (recommended) OR bare metal with root access
+- Python 3.9+
+- Docker (for deployment)
+- A domain name or free [DuckDNS](https://www.duckdns.org/) subdomain (for public access)
 
 ## License
 
 MIT
-
----
-
-*Born from a real annotation project at Brandeis University. Built by Anna Brezgis and Claude.*

@@ -8,16 +8,17 @@ TIMESTAMP=$(date +%Y-%m-%d_%H%M)
 
 # Parse config (requires yq or python fallback)
 parse_yaml() {
-    python3 -c "
+    python3 - "$CONFIG" "$1" <<'PYEOF'
 import yaml, sys
-with open('$CONFIG') as f:
+config_path = sys.argv[1]
+dotted_key = sys.argv[2]
+with open(config_path) as f:
     c = yaml.safe_load(f)
-# Navigate dotted path
 val = c
-for key in '$1'.split('.'):
+for key in dotted_key.split('.'):
     val = val.get(key, {}) if isinstance(val, dict) else ''
 print(val if val else '')
-"
+PYEOF
 }
 
 LS_HOST="${LS_HOST:-http://127.0.0.1:$(parse_yaml server.port)}"
@@ -76,13 +77,13 @@ for p in projects:
         -o "$outfile"
 
     # Count annotations
-    count=$(python3 -c "
-import json
-data = json.load(open('$outfile'))
+    count=$(python3 - "$outfile" <<'PYEOF' 2>/dev/null || echo "?/?")
+import json, sys
+data = json.load(open(sys.argv[1]))
 annotated = sum(1 for t in data if t.get('annotations'))
 total = len(data)
 print(f'{annotated}/{total}')
-" 2>/dev/null || echo "?/?")
+PYEOF
 
     echo "  Project ${project_id} (${project_title}): ${count} annotated"
 done

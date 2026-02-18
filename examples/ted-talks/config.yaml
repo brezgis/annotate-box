@@ -1,0 +1,74 @@
+# Example: TED Talk Rhetorical Device Annotation
+
+project:
+  name: "TED Talk Rhetorical Devices"
+  description: "Sentence-level annotation of rhetorical devices in TED Talk transcripts"
+
+server:
+  duckdns:
+    subdomain: ted-talk-project
+    token: YOUR_DUCKDNS_TOKEN
+  admin:
+    email: you@example.com
+    password: changeme123
+  port: 8093
+
+team:
+  - name: Anna
+    email: anna@example.com
+    role: admin
+  - name: Edith
+    email: edith@example.com
+  - name: Amanda
+    email: amanda@example.com
+
+schema:
+  type: span
+  granularity: sentence
+  labels:
+    - name: SOUND
+      hotkey: "1"
+      color: "#FF6B6B"
+      description: "Sound devices — alliteration, assonance, consonance, rhyme, rhythm, onomatopoeia"
+    - name: FIG
+      hotkey: "2"
+      color: "#4ECDC4"
+      description: "Figurative language — metaphor, simile, analogy, personification, hyperbole"
+    - name: REP
+      hotkey: "3"
+      color: "#45B7D1"
+      description: "Repetition — anaphora, epistrophe, anadiplosis, tricolon, structural parallelism"
+    - name: IRONY
+      hotkey: "4"
+      color: "#96CEB4"
+      description: "Irony and subversion — verbal irony, sarcasm, litotes, rhetorical reversal"
+    - name: ENG
+      hotkey: "5"
+      color: "#FFEAA7"
+      description: "Audience engagement — rhetorical questions, direct address, commands, humor cues"
+    - name: NONE
+      hotkey: "6"
+      color: "#BDC3C7"
+      description: "No rhetorical device present"
+    - name: UNCERTAIN
+      hotkey: "9"
+      color: "#95A5A6"
+      description: "Annotator is unsure"
+  max_annotations: 1  # Set to 3 for calibration project
+
+data:
+  format: json
+  source: ./data/
+  sentence_split: true
+  shuffle: true
+  shuffle_seed: 42
+  max_items: 200
+
+export:
+  schedule: daily
+  time: "22:00"
+  timezone: "America/New_York"
+  format: json
+  git:
+    enabled: true
+    push: true
